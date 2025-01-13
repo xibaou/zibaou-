@@ -1,44 +1,46 @@
-/*
-   * by balzz
-   * dont delate my wm
-   * follow more instagram: @iqstore78
-*/
-const axios = require("axios")
-const allowedApiKeys = require("../../declaration/arrayKey.jsx")
+const express = require("express");
+const canvafy = require("canvafy");
+const allowedApiKeys = require("../../declaration/arrayKey.jsx");
 
 module.exports = async (req, res) => {
-  const urls = req.query.urls
-  const apiKey = req.query.apiKey
+  const { apiKey, displayName, username, comment, avatar, theme } = req.query;
 
-  if (!urls) {
-    return res.status(400).json({
-      error: "Url Tiktok Nya Mana?"
-    })
-  }
-
+  // Validasi API key
   if (!apiKey) {
     return res.status(403).json({
-      error: "Input Parameter Apikey!"
-    })
+      error: "Input Parameter Apikey!",
+    });
   } else if (!allowedApiKeys.includes(apiKey)) {
     return res.status(403).json({
-      error: "apikey not found"
-    })
+      error: "Apikey not found",
+    });
   }
 
-  let url = `https://api.agatz.xyz/api/tiktok?url=${urls}`
+  // Validasi parameter
+  if (!displayName || !username || !comment || !avatar) {
+    return res.status(400).json({
+      error: "Semua parameter (displayName, username, comment, avatar) wajib diisi!",
+    });
+  }
 
   try {
-    const response = await axios.get(url)
-    const data = response.data.data
-    const videoUrlNoWatermark = data.data.find(item => item.type === "nowatermark").url
+    // Membuat kartu tweet dengan Canvafy
+    const tweet = await new canvafy.Tweet()
+      .setTheme(theme || "light") // Default ke 'light' jika tema tidak disediakan
+      .setUser({ displayName, username })
+      .setVerified(true) // Anggap pengguna terverifikasi (bisa disesuaikan)
+      .setComment(comment)
+      .setAvatar(avatar)
+      .build();
 
-    res.status(200).json({
-      data: videoUrlNoWatermark
-    })
+    // Mengembalikan buffer sebagai respons
+    res.setHeader("Content-Type", "image/png");
+    res.status(200).send(tweet);
   } catch (error) {
+    console.error("An error occurred:", error);
+
     res.status(500).json({
-      error: "Ada masalah, coba lagi nanti"
-    })
+      error: "Ada masalah saat membuat kartu tweet. Silakan coba lagi nanti.",
+    });
   }
-}
+};
