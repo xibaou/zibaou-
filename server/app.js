@@ -12,8 +12,14 @@ const bodyParser = require('body-parser')
 const { limit, checkBanned } = require("../declaration/rateLimit.jsx")
 const isAuthenticated = require("../declaration/autentikasi.jsx")
 
+
+// Aktifkan trust proxy
+
+
+// Middleware dan rute lainnya
 const app = express()
 app.use(checkBanned)
+app.set('trust proxy', true);
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(session({
@@ -61,16 +67,9 @@ app.get("/prof", isAuthenticated, (req, res) => {
     require("../declaration/profile.jsx")(req, res)
 })
 
-app.get("/blekbok", limit, async (req, res) => {
-    require("../pages/fitures/blackbox.js")(req, res)
-})
 
 app.get("/tweet", limit, async (req, res) => {
     require("../pages/fitures/tweet.js")(req, res)
-})
-
-app.get("/instagramDL", limit, async (req, res) => {
-    require("../pages/fitures/instagram.js")(req, res)
 })
 
 app.use((req, res, next) => {
